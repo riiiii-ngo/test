@@ -7,7 +7,7 @@ pxs = 0
 pys = 0
 
 #障害物
-BLOCK_MAX = 0
+BLOCK_MAX = 20
 block_n = 0
 block_x = [0]*BLOCK_MAX
 block_y = [0]*BLOCK_MAX
@@ -26,14 +26,12 @@ pbomb_flg = [False]*PBOMB_MAX
 pbomb_count = 0
 
 #敵
-ENEMY_MAX = 1
+ENEMY_MAX = 30
 enemy_n = 0
 enemy_x = [400]*ENEMY_MAX
 enemy_y = [300]*ENEMY_MAX
-enemy_xx = [1]*ENEMY_MAX
+enemy_xx = [0]*ENEMY_MAX
 enemy_yy = [0]*ENEMY_MAX
-enemy_ex = [0]*ENEMY_MAX
-enemy_ey = [10]*ENEMY_MAX
 
 #障害物の処理
 def setblock(screen):
@@ -124,23 +122,15 @@ def main():
         pygame.draw.circle(screen,(10,10,10),(px,py),30) 
 
         #敵の移動
-        #for enemy_n in range(ENEMY_MAX):
-            #if random.randint(0,1000) % 999 == 0:
-                #moveenemy()
-
-        enemy_ex[0] += enemy_xx[0]
-        enemy_ey[0] = 2342 - enemy_ex[0]
+        for enemy_n in range(ENEMY_MAX):
+            if random.randint(0,1000) % 999 == 0:
+                moveenemy()
 
         #敵の当たり判定処理
         for enemy_n in range(ENEMY_MAX):
-            enemy_ex[enemy_n] = enemy_x[enemy_n]
-            enemy_ey[enemy_n] = enemy_y[enemy_n]
-            if hit(enemy_x[enemy_n] + 30,enemy_x[enemy_n],enemy_y[enemy_n] + 30,enemy_y[enemy_n]) or wall(enemy_x[enemy_n] - enemy_ey[enemy_n] - 100,enemy_y[enemy_n],30):
+            if hit(enemy_x[enemy_n] + 30 - pxs,enemy_x[enemy_n] - pxs,enemy_y[enemy_n] + 30 - pys,enemy_y[enemy_n] - pys) or wall(enemy_x[enemy_n] - 400,enemy_y[enemy_n] - 300,30):
                 enemy_xx[enemy_n] *= -1
                 enemy_yy[enemy_n] *= -1
-                enemy_ex[enemy_n] = 255
-                enemy_ey[enemy_n] = 0
-                print('e' +str(enemy_n) +','+ str(enemy_x[enemy_n] - pxs) + ',' + str(enemy_y[enemy_n] - pys))
 
         #弾か障害物に当たれば初期位置に戻る
         for pbomb_n in range(PBOMB_MAX):
