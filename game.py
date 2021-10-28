@@ -83,8 +83,6 @@ def main():
     pygame.init()                                 # Pygameの初期化
     screen = pygame.display.set_mode((800, 600))  # 800*600の画面
 
-    count = 0
-
     #プレイヤーの座標
     px = 400
     py = 300
@@ -128,7 +126,7 @@ def main():
 
         #敵の移動
         for enemy_n in range(ENEMY_MAX):
-            if count % 500 == 0:
+            if random.randint(500,1000) % 500 == 0:
                 moveenemy()
 
         #敵の当たり判定処理
@@ -212,8 +210,6 @@ def main():
 
         #画面の更新
         pygame.display.update()
-
-        count += 1
 
 
 if __name__ == "__main__":
