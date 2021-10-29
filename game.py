@@ -17,16 +17,23 @@ block_width = [0]*BLOCK_MAX
 #プレイヤーの弾
 PBOMB_MAX = 10
 pbomb_n = 0
-pbomb_x = [400]*PBOMB_MAX
-pbomb_y = [300]*PBOMB_MAX
-pbomb_xx = [0]*PBOMB_MAX
-pbomb_yy = [0]*PBOMB_MAX
-pbomb_s = [0]*PBOMB_MAX
+pbomb_x = [400.0]*PBOMB_MAX
+pbomb_y = [300.0]*PBOMB_MAX
+pbomb_xx = [0.0]*PBOMB_MAX
+pbomb_yy = [0.0]*PBOMB_MAX
+pbomb_s = [0.0]*PBOMB_MAX
 pbomb_flg = [False]*PBOMB_MAX
 pbomb_count = 0
 
+#マウスの座標
+mpos_x = 0
+mpos_y = 0
+mflg_x = True
+mflg_y = True
+mpos_s = 0
+
 #敵
-ENEMY_MAX = 30
+ENEMY_MAX = 50
 enemy_n = 0
 enemy_x = [400]*ENEMY_MAX
 enemy_y = [300]*ENEMY_MAX
@@ -41,12 +48,10 @@ def setblock(screen):
 #弾の処理
 def bomb(screen):
     global pbomb_n,pbomb_x,pbomb_y,pbomb_s
-    pbomb_yy[pbomb_n] += pbomb_s[pbomb_n]
-    pbomb_y[pbomb_n] += pbomb_s[pbomb_n]
-    if pbomb_flg[pbomb_n] == False:
-        pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
-    else:
-        pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
+    pbomb_x[pbomb_n] += pbomb_xx[pbomb_n]
+    pbomb_y[pbomb_n] += pbomb_yy[pbomb_n]
+    print('x = ' + str(pbomb_x[pbomb_n]) + ',y = ' + str(pbomb_y[pbomb_n]) + ',xx = ' + str(pbomb_xx[pbomb_n]) + ',yy = ' + str(pbomb_yy[pbomb_n]) + ',s = ' + str(pbomb_s[pbomb_n]) + ',n == ' + str(pbomb_n))
+    pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
 
 #障害物の当たり判定
 def hit(d,a,s,w):
@@ -71,6 +76,34 @@ def setenemy(screen):
 def moveenemy():
     enemy_xx[enemy_n] = random.randint(-1,1)
     enemy_yy[enemy_n] = random.randint(-1,1)
+
+def attack():
+    global mpos_x,mpos_y,mflg_x,mflg_y,mpos_s,pbomb_xx,pbomb_yy
+    mpos_x,mpos_y = pygame.mouse.get_pos()
+
+    if mpos_x > 400:
+        mflg_x = True
+    else:
+        mflg_x = False
+    if mpos_y > 300:
+        mflg_y = True
+    else:
+        mflg_y = False
+
+    if mflg_x == False or mflg_y == False:
+        if mpos_x * -1 > mpos_y:
+            mpos_s = mpos_x
+        else:
+            mpos_s = mpos_y
+    else:
+        if mpos_x > mpos_y:
+            mpos_s = mpos_x
+        else:
+            mpos_s = mpos_y
+
+    pbomb_xx = (mpos_x - 400) / mpos_s
+    pbomb_yy = (mpos_y - 300) / mpos_s
+
 
 def main():
     global pxs,pys,block_n,block_x,block_y,block_height,block_width,pbomb_n,pbomb_x,pbomb_y,pbomb_s,pbomb_count,enemy_n
@@ -101,9 +134,6 @@ def main():
         block_height[block_n] = random.randint(100,200)
         block_width[block_n] = random.randint(100,200)
 
-        for block_n in range(BLOCK_MAX):
-            print(str(block_x[block_n]) + ',' + str(block_y[block_n]))
-
     while True:
         screen.fill((255,255,255))
 
@@ -123,7 +153,7 @@ def main():
 
         #敵の移動
         for enemy_n in range(ENEMY_MAX):
-            if random.randint(0,1000) % 999 == 0:
+            if random.randint(0,100) % 100 == 0:
                 moveenemy()
 
         #敵の当たり判定処理
@@ -133,12 +163,12 @@ def main():
                 enemy_yy[enemy_n] *= -1
 
         #弾か障害物に当たれば初期位置に戻る
-        for pbomb_n in range(PBOMB_MAX):
-            if hit(pbomb_x[pbomb_n] + 5,pbomb_x[pbomb_n],pbomb_y[pbomb_n] + 5,pbomb_y[pbomb_n]) or wall(pbomb_xx[pbomb_n],pbomb_yy[pbomb_n],5):
-                pbomb_x[pbomb_n] = 400
-                pbomb_y[pbomb_n] = 300
-                pbomb_s[pbomb_n] = 0   
-                pbomb_flg[pbomb_n] = False 
+        #for pbomb_n in range(PBOMB_MAX):
+         #   if hit(int(pbomb_x[pbomb_n]) + 5,int(pbomb_x[pbomb_n]),int(pbomb_y[pbomb_n]) + 5,int(pbomb_y[pbomb_n])) or wall(int(pbomb_xx[pbomb_n]),int(pbomb_yy[pbomb_n]),5):
+          #      pbomb_x[pbomb_n] = 400
+           #     pbomb_y[pbomb_n] = 300
+            #    pbomb_s[pbomb_n] = 0   
+             #   pbomb_flg[pbomb_n] = False 
 
         #弾の表示
         for pbomb_n in range(PBOMB_MAX):
@@ -154,11 +184,8 @@ def main():
                     pygame.quit()
                     sys.exit()
                 elif event.key == K_SPACE:
-                    pbomb_xx[pbomb_count] = pxs
-                    pbomb_yy[pbomb_count] = pys
                     pbomb_s[pbomb_count] = -1
-                    pbomb_flg[pbomb_count] = True
-                    pbomb_count += 1
+                    attack()
                     if pbomb_count >= 10:
                         pbomb_count = 0
 
