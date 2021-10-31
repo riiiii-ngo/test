@@ -17,28 +17,21 @@ block_width = [0]*BLOCK_MAX
 #プレイヤーの弾
 PBOMB_MAX = 10
 pbomb_n = 0
-pbomb_x = [400.0]*PBOMB_MAX
-pbomb_y = [300.0]*PBOMB_MAX
-pbomb_xx = [0.0]*PBOMB_MAX
-pbomb_yy = [0.0]*PBOMB_MAX
-pbomb_s = [0.0]*PBOMB_MAX
+pbomb_x = [400]*PBOMB_MAX
+pbomb_y = [300]*PBOMB_MAX
+pbomb_xx = [0]*PBOMB_MAX
+pbomb_yy = [0]*PBOMB_MAX
 pbomb_flg = [False]*PBOMB_MAX
 pbomb_count = 0
 
-#マウスの座標
-mpos_x = 0
-mpos_y = 0
-mflg_x = True
-mflg_y = True
-mpos_s = 0
-
 #敵
-ENEMY_MAX = 50
+ENEMY_MAX = 15
 enemy_n = 0
 enemy_x = [400]*ENEMY_MAX
 enemy_y = [300]*ENEMY_MAX
 enemy_xx = [0]*ENEMY_MAX
 enemy_yy = [0]*ENEMY_MAX
+enemy_flg = [True]*ENEMY_MAX
 
 #障害物の処理
 def setblock(screen):
@@ -47,11 +40,15 @@ def setblock(screen):
 
 #弾の処理
 def bomb(screen):
-    global pbomb_n,pbomb_x,pbomb_y,pbomb_s
-    pbomb_x[pbomb_n] += pbomb_xx[pbomb_n]
-    pbomb_y[pbomb_n] += pbomb_yy[pbomb_n]
-    print('x = ' + str(pbomb_x[pbomb_n]) + ',y = ' + str(pbomb_y[pbomb_n]) + ',xx = ' + str(pbomb_xx[pbomb_n]) + ',yy = ' + str(pbomb_yy[pbomb_n]) + ',s = ' + str(pbomb_s[pbomb_n]) + ',n == ' + str(pbomb_n))
-    pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
+    global pbomb_n,pbomb_x,pbomb_y
+    if pbomb_flg[pbomb_n] == True:
+        pbomb_x[pbomb_n] += pbomb_xx[pbomb_n]
+        pbomb_y[pbomb_n] += pbomb_yy[pbomb_n]
+        pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
+    else:
+        pbomb_x[pbomb_n] = 400
+        pbomb_y[pbomb_n] = 300
+        pygame.draw.circle(screen,(10,10,10),(pbomb_x[pbomb_n],pbomb_y[pbomb_n]),5)
 
 #障害物の当たり判定
 def hit(d,a,s,w):
@@ -77,36 +74,19 @@ def moveenemy():
     enemy_xx[enemy_n] = random.randint(-1,1)
     enemy_yy[enemy_n] = random.randint(-1,1)
 
-def attack():
-    global mpos_x,mpos_y,mflg_x,mflg_y,mpos_s,pbomb_xx,pbomb_yy
-    mpos_x,mpos_y = pygame.mouse.get_pos()
-
-    if mpos_x > 400:
-        mflg_x = True
-    else:
-        mflg_x = False
-    if mpos_y > 300:
-        mflg_y = True
-    else:
-        mflg_y = False
-
-    if mflg_x == False or mflg_y == False:
-        if mpos_x * -1 > mpos_y:
-            mpos_s = mpos_x
-        else:
-            mpos_s = mpos_y
-    else:
-        if mpos_x > mpos_y:
-            mpos_s = mpos_x
-        else:
-            mpos_s = mpos_y
-
-    pbomb_xx = (mpos_x - 400) / mpos_s
-    pbomb_yy = (mpos_y - 300) / mpos_s
+def hitenemy():
+    global pbomb_n,pbomb_flg,pbomb_xx,pbomb_yy,enemy_n,enemy_flg
+    for pbomb_n in range(PBOMB_MAX):
+        for enemy_n in range(ENEMY_MAX):
+            if enemy_x[enemy_n] - pxs < pbomb_x[pbomb_n] - pxs and enemy_x[enemy_n] - pxs > pbomb_x[pbomb_n] - pxs and enemy_y[pbomb_n] - pys < pbomb_y[pbomb_n] - pys and enemy_y[enemy_n] - pys > pbomb_y[pbomb_n] - pys:
+                pbomb_flg[pbomb_n] = False
+                pbomb_xx[pbomb_n] = 0
+                pbomb_yy[pbomb_n] = 0
+                enemy_flg[enemy_n] = False
 
 
 def main():
-    global pxs,pys,block_n,block_x,block_y,block_height,block_width,pbomb_n,pbomb_x,pbomb_y,pbomb_s,pbomb_count,enemy_n
+    global pxs,pys,block_n,block_x,block_y,block_height,block_width,pbomb_n,pbomb_x,pbomb_y,pbomb_xx,pbomb_yy,pbomb_count,enemy_n
     pygame.init()                                 # Pygameの初期化
     screen = pygame.display.set_mode((800, 600))  # 800*600の画面
 
@@ -146,15 +126,16 @@ def main():
 
         #敵の表示
         for enemy_n in range(ENEMY_MAX):
-            setenemy(screen)
+            if enemy_flg[enemy_n] == True:
+                setenemy(screen)
 
         #プレイヤーの表示
         pygame.draw.circle(screen,(10,10,10),(px,py),30) 
 
         #敵の移動
-        for enemy_n in range(ENEMY_MAX):
-            if random.randint(0,100) % 100 == 0:
-                moveenemy()
+        #for enemy_n in range(ENEMY_MAX):
+         #   if random.randint(0,100) % 100 == 0:
+          #      moveenemy()
 
         #敵の当たり判定処理
         for enemy_n in range(ENEMY_MAX):
@@ -162,13 +143,17 @@ def main():
                 enemy_xx[enemy_n] *= -1
                 enemy_yy[enemy_n] *= -1
 
-        #弾か障害物に当たれば初期位置に戻る
-        #for pbomb_n in range(PBOMB_MAX):
-         #   if hit(int(pbomb_x[pbomb_n]) + 5,int(pbomb_x[pbomb_n]),int(pbomb_y[pbomb_n]) + 5,int(pbomb_y[pbomb_n])) or wall(int(pbomb_xx[pbomb_n]),int(pbomb_yy[pbomb_n]),5):
-          #      pbomb_x[pbomb_n] = 400
-           #     pbomb_y[pbomb_n] = 300
-            #    pbomb_s[pbomb_n] = 0   
-             #   pbomb_flg[pbomb_n] = False 
+        #弾が障害物に当たれば初期位置に戻る
+        for pbomb_n in range(PBOMB_MAX):
+            if hit(int(pbomb_x[pbomb_n]) + 5,int(pbomb_x[pbomb_n]),int(pbomb_y[pbomb_n]) + 5,int(pbomb_y[pbomb_n])) or wall(int(pbomb_x[pbomb_n] + pxs - 400),int(pbomb_y[pbomb_n] + pys - 300),5):
+                pbomb_flg[pbomb_n] = False
+                pbomb_xx[pbomb_n] = 400
+                pbomb_yy[pbomb_n] = 300 
+                pbomb_xx[pbomb_n] = 0
+                pbomb_yy[pbomb_n] = 0 
+                print(str(pbomb_x[pbomb_n]) + ',' + str(pbomb_y[pbomb_n]))
+
+        hitenemy()
 
         #弾の表示
         for pbomb_n in range(PBOMB_MAX):
@@ -184,12 +169,11 @@ def main():
                     pygame.quit()
                     sys.exit()
                 elif event.key == K_SPACE:
-                    pbomb_s[pbomb_count] = -1
-                    attack()
-                    if pbomb_count >= 10:
-                        pbomb_count = 0
-
-
+                    if pbomb_flg[pbomb_count] == False:
+                        pbomb_flg[pbomb_count] = True
+                        pbomb_count += 1
+                        if pbomb_count >= 10:
+                            pbomb_count = 0
 
         #プレイヤーの移動
         keys = pygame.key.get_pressed()
@@ -224,6 +208,21 @@ def main():
             if hit(430,370,330,270):
                 pxs = xx
 
+        if keys[K_UP]:
+            pbomb_xx[pbomb_count] = 0
+            pbomb_yy[pbomb_count] = -1
+
+        if keys[K_LEFT]:
+            pbomb_xx[pbomb_count] = -1
+            pbomb_yy[pbomb_count] = 0
+
+        if keys[K_DOWN]:
+            pbomb_xx[pbomb_count] = 0
+            pbomb_yy[pbomb_count] = +1
+
+        if keys[K_RIGHT]:
+            pbomb_xx[pbomb_count] = +1
+            pbomb_yy[pbomb_count] = 0
 
         #画面の更新
         pygame.display.update()
